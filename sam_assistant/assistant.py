@@ -27,14 +27,25 @@ class SamAssistant:
         return response
 
     def run_continuously(self):
-        """Continuous background loop waiting for single-shot commands."""
+        """Continuous background loop waiting for commands."""
+        import winsound
         print("Sam Assistant is now listening continuously for any command containing 'sam'...")
         while True:
             full_text = self.listener.listen_continuously_for_command("sam")
             if full_text:
                 # Strip the wake word out of the command
                 command = full_text.replace("hey sam", "").replace("sam", "").strip()
+                
                 if command:
+                    # Single-shot command (e.g. "Sam open Spotify")
                     self.process_command(command)
                 else:
-                    self.speaker.speak("Yes?")
+                    # Just said "Sam" - play a chime and wait for command!
+                    print("Wake word detected! Playing chime...")
+                    winsound.Beep(1000, 200) # Ding!
+                    
+                    follow_up = self.listener.listen(timeout=5, phrase_time_limit=10)
+                    if follow_up:
+                        self.process_command(follow_up)
+                    else:
+                        print("No follow-up command detected.")

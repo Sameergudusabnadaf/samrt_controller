@@ -39,13 +39,14 @@ class Listener:
     def listen_continuously_for_command(self, wake_word="sam"):
         """Continuously listens and returns the full sentence if the wake word is in it."""
         print(f"Waiting for wake word: '{wake_word}' in a sentence...")
-        while True:
-            try:
-                with sr.Microphone() as source:
-                    # Shorter ambient noise adjustment for faster loops
-                    self.recognizer.adjust_for_ambient_noise(source, duration=0.2)
+        try:
+            with sr.Microphone() as source:
+                # Adjust for ambient noise once before the loop to speed up iterations
+                self.recognizer.adjust_for_ambient_noise(source, duration=1.0)
+                
+                while True:
                     # We allow a longer phrase time limit so they can finish their sentence
-                    audio = self.recognizer.listen(source, phrase_time_limit=10)
+                    audio = self.recognizer.listen(source, phrase_time_limit=8)
                     
                     try:
                         text = self.recognizer.recognize_google(audio).lower()
@@ -54,10 +55,10 @@ class Listener:
                             return text
                     except sr.UnknownValueError:
                         pass # Ignore ambient noise
-            except Exception as e:
-                print(f"Error in background listening: {e}")
-                import time
-                time.sleep(2)
+        except Exception as e:
+            print(f"Error in background listening: {e}")
+            import time
+            time.sleep(2)
 
 # For standalone testing
 if __name__ == "__main__":

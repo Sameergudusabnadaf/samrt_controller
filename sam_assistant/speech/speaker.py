@@ -1,22 +1,42 @@
-import pyttsx3
 import datetime
+import os
+import pygame
+from gtts import gTTS
 
 class Speaker:
     def __init__(self):
-        self.engine = pyttsx3.init()
-        # You can adjust the properties here
-        # self.engine.setProperty('rate', 150)
-        # self.engine.setProperty('volume', 1.0)
-        # Set to female or male voice
-        voices = self.engine.getProperty('voices')
-        if len(voices) > 1:
-            self.engine.setProperty('voice', voices[1].id)  # Often female voice in Windows
+        # Initialize the pygame mixer for playing MP3s
+        pygame.mixer.init()
 
     def speak(self, text):
-        """Speaks the given text out loud."""
+        """Speaks the given text out loud using Google TTS."""
         print(f"Sam Assistant: {text}")
-        self.engine.say(text)
-        self.engine.runAndWait()
+        if not text.strip():
+            return
+            
+        try:
+            # Generate speech
+            tts = gTTS(text=text, lang='en', tld='com') 
+            filename = "temp_response.mp3"
+            tts.save(filename)
+            
+            # Play the audio
+            pygame.mixer.music.load(filename)
+            pygame.mixer.music.play()
+            
+            # Wait until it finishes playing
+            while pygame.mixer.music.get_busy():
+                pygame.time.Clock().tick(10)
+                
+            # Unload the file so we can delete it
+            pygame.mixer.music.unload()
+            
+            # Clean up temporary file
+            if os.path.exists(filename):
+                os.remove(filename)
+                
+        except Exception as e:
+            print(f"TTS Error: {e}")
 
     def greet_user(self, user_name="Sameer"):
         """Greets the user based on the current time."""
